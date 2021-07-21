@@ -15,7 +15,7 @@
     >
       <!-- Search input -->
       <div class="w-full max-w-screen-sm">
-        <h1 class="text-white text-center text-3xl pb-4">IP Address Tracker</h1>
+        <h1 class="text-white text-center text-3xl pb-4">IP Address Track</h1>
         <form @submit.prevent="getIpInfo" class="flex">
           <input
             v-model="queryIP"

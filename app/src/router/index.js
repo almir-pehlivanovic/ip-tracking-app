@@ -7,7 +7,7 @@ const routes = [
     name: 'Home',
     component: Home,
     meta:{
-      title: "IP Address Tracker",
+      title: "IP Address Track",
     }
   },
 ]
