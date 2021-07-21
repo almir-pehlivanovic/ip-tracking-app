@@ -16,8 +16,9 @@
       <!-- Search input -->
       <div class="w-full max-w-screen-sm">
         <h1 class="text-white text-center text-3xl pb-4">IP Adress Tracker</h1>
-        <div class="flex">
+        <form @submit.prevent="getIpInfo" class="flex">
           <input
+            v-model="queryIP"
             class="
               flex-1
               py-3
@@ -28,7 +29,7 @@
             type="text"
             placeholder="Search for any IP address or leave empty to get your ip info"
           />
-          <span
+          <button
             class="
               cursor-pointer
               bg-black
@@ -40,6 +41,7 @@
             "
           >
             <svg
+              type="submit"
               class="h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
@@ -52,11 +54,11 @@
                 d="M9 5l7 7-7 7"
               />
             </svg>
-          </span>
-        </div>
+          </button>
+        </form>
       </div>
       <!-- IP info -->
-      <IPInfo />
+      <IPInfo v-if="ipInfo" :ipInfo="ipInfo" />
     </div>
     <!-- Map -->
     <div id="mapid" class="h-full z-10"></div>
@@ -65,9 +67,10 @@
 
 <script>
 // @ is an alias to /src
-import IPInfo from "../components/IPInfo.vue";
+import IPInfo from "@/components/IPInfo.vue";
 import leaflet from "leaflet";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
+import axios from "axios";
 
 export default {
   name: "Home",
@@ -76,8 +79,13 @@ export default {
   },
   setup() {
     let mymap;
+    const queryIP = ref("");
+    const ipInfo = ref(null);
     onMounted(() => {
-      mymap = leaflet.map("mapid").setView([51.505, -0.09], 13);
+      mymap = leaflet
+        .map("mapid")
+        .setView([44.81367803751815, 15.868384436068883], 8);
+      leaflet.marker([44.81367803751815, 15.868384436068883]).addTo(mymap);
       leaflet
         .tileLayer(
           "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiYW1rby0xMjMiLCJhIjoiY2tyZGpzOHN3MWlrMTJvcXV6ajRkanIzNSJ9.UWIVYjVnsFv8brlzVLMNCw",
@@ -88,11 +96,34 @@ export default {
             id: "mapbox/streets-v11",
             tileSize: 512,
             zoomOffset: -1,
-            accessToken: "pk.eyJ1IjoiYW1rby0xMjMiLCJhIjoiY2tyZGpzOHN3MWlrMTJvcXV6ajRkanIzNSJ9.UWIVYjVnsFv8brlzVLMNCw",
+            accessToken:
+              "pk.eyJ1IjoiYW1rby0xMjMiLCJhIjoiY2tyZGpzOHN3MWlrMTJvcXV6ajRkanIzNSJ9.UWIVYjVnsFv8brlzVLMNCw",
           }
         )
         .addTo(mymap);
     });
+
+    const getIpInfo = async () => {
+      try {
+        const data = await axios.get(
+          `https://geo.ipify.org/api/v1?apiKey=at_M0Xc5IjW5sTpGATFuXhoaVdCa2TWt&ipAddress=${queryIP.value}`
+        );
+        const result = data.data;
+        ipInfo.value = {
+          address: result.ip,
+          state: result.location.region,
+          timezone: result.location.timezone,
+          isp: result.isp,
+          lat: result.location.lat,
+          lng: result.location.lng,
+        };
+        leaflet.marker([ipInfo.value.lat, ipInfo.value.lng]).addTo(mymap);
+        mymap.setView([ipInfo.value.lat, ipInfo.value.lng], 13);
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+    return { queryIP, ipInfo, getIpInfo };
   },
 };
 </script>
